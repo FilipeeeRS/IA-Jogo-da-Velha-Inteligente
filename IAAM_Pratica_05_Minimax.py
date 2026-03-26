@@ -1,13 +1,5 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Prática 05 - Jogo da Velha com Agente Inteligente (Minimax)
-# Disciplina: Inteligência Artificial e Aprendizado de Máquina
 # PUC-Campinas - Engenharia de Software
-
-# ============================================================
-# PARTE 1 - FUNÇÕES BASE DO JOGO (mantidas da prática anterior)
-# ============================================================
+# Disciplina: 
 
 def mostra_tabuleiro(tabuleiro):
 
@@ -53,56 +45,33 @@ def obter_movimentos_possiveis(tabuleiro):
     return movimentos
 
 def minimax(tabuleiro, profundidade, eh_maximizador):
-    """
-    Algoritmo Minimax recursivo para escolha da melhor jogada.
-
-    O agente (IA) joga com "O" e busca MAXIMIZAR sua pontuação.
-    O usuário joga com "X" e busca MINIMIZAR a pontuação do agente.
-
-    A função de utilidade (heurística) retorna:
-      +10 - (profundidade): vitória do agente (preferência por vitórias rápidas)
-      -10 + (profundidade): vitória do usuário (preferência por derrotas mais tardias)
-       0               : empate
-
-    Parâmetros:
-        tabuleiro      -- estado atual do tabuleiro
-        profundidade   -- nível atual na árvore de busca (Game Tree)
-        eh_maximizador -- True se for a vez do agente (MAX), False se for do usuário (MIN)
-
-    Retorno:
-        Valor inteiro representando a utilidade do estado.
-    """
-
-    # --- Casos base (estados terminais da Game Tree) ---
-
+    
     if verifica_vitoria(tabuleiro, "O"):
-        return 10 - profundidade   # Agente venceu (MAX quer este valor alto)
+        return 10 - profundidade
 
     if verifica_vitoria(tabuleiro, "X"):
-        return -10 + profundidade  # Usuário venceu (MIN quer este valor baixo)
+        return -10 + profundidade
 
     if verifica_empate(tabuleiro):
-        return 0                   # Empate: valor neutro
+        return 0
 
     movimentos = obter_movimentos_possiveis(tabuleiro)
 
     if eh_maximizador:
-        # Nó MAX: agente tenta maximizar a pontuação
         melhor_valor = float('-inf')
         for (linha, coluna) in movimentos:
             tabuleiro[linha][coluna] = "O"
             valor = minimax(tabuleiro, profundidade + 1, False)
-            tabuleiro[linha][coluna] = " "  # desfaz a jogada (backtracking)
+            tabuleiro[linha][coluna] = " "
             melhor_valor = max(melhor_valor, valor)
         return melhor_valor
 
     else:
-        # Nó MIN: usuário tenta minimizar a pontuação do agente
         melhor_valor = float('inf')
         for (linha, coluna) in movimentos:
             tabuleiro[linha][coluna] = "X"
             valor = minimax(tabuleiro, profundidade + 1, True)
-            tabuleiro[linha][coluna] = " "  # desfaz a jogada (backtracking)
+            tabuleiro[linha][coluna] = " "
             melhor_valor = min(melhor_valor, valor)
         return melhor_valor
 
