@@ -1,33 +1,37 @@
-# PUC-Campinas - Engenharia de Software
-# Disciplina: 
+# PUC-Campinas Engenharia de Software
+# Inteligencia Artificial e Aprendizado de Maquina
 
+# mostra o tabuleiro do jogo
 def mostra_tabuleiro(tabuleiro):
-
     print("-------------")
     for linha in tabuleiro:
         print("|", linha[0], "|", linha[1], "|", linha[2], "|")
         print("-------------")
 
 
+# checa se algum jogador ganhou (linha, coluna ou diagonal)
 def verifica_vitoria(tabuleiro, jogador):
 
+    # linhas
     for i in range(3):
         if tabuleiro[i][0] == jogador and tabuleiro[i][1] == jogador and tabuleiro[i][2] == jogador:
             return True
 
+    # colunas
     for i in range(3):
         if tabuleiro[0][i] == jogador and tabuleiro[1][i] == jogador and tabuleiro[2][i] == jogador:
             return True
 
+    # diagonais
     if tabuleiro[0][0] == jogador and tabuleiro[1][1] == jogador and tabuleiro[2][2] == jogador:
         return True
-
     if tabuleiro[0][2] == jogador and tabuleiro[1][1] == jogador and tabuleiro[2][0] == jogador:
         return True
 
     return False
 
 
+# verifica se nao tem mais espaco no tabuleiro
 def verifica_empate(tabuleiro):
     for linha in tabuleiro:
         for celula in linha:
@@ -36,60 +40,69 @@ def verifica_empate(tabuleiro):
     return True
 
 
-def obter_movimentos_possiveis(tabuleiro):
-    movimentos = []
+# retorna as posicoes que ainda estao vazias
+def posicoes_vazias(tabuleiro):
+    vazias = []
     for i in range(3):
         for j in range(3):
             if tabuleiro[i][j] == " ":
-                movimentos.append((i, j))
-    return movimentos
+                vazias.append((i, j))
+    return vazias
 
-def minimax(tabuleiro, profundidade, eh_maximizador):
-    
+
+# algoritmo minimax - vai testar todas as jogadas possiveis e retornar o valor do melhor caminho
+# maximizador = agente (O), minimizador = usuario (X)
+def minimax(tabuleiro, profundidade, maximizando):
+
+    # casos de parada
     if verifica_vitoria(tabuleiro, "O"):
-        return 10 - profundidade
+        return 10 - profundidade  # ganhamos, buscar ganhar rapido
 
     if verifica_vitoria(tabuleiro, "X"):
-        return -10 + profundidade
+        return -10 + profundidade  # perdemos, buscar demorar mais pra perder
 
     if verifica_empate(tabuleiro):
         return 0
 
-    movimentos = obter_movimentos_possiveis(tabuleiro)
-
-    if eh_maximizador:
-        melhor_valor = float('-inf')
-        for (linha, coluna) in movimentos:
-            tabuleiro[linha][coluna] = "O"
-            valor = minimax(tabuleiro, profundidade + 1, False)
-            tabuleiro[linha][coluna] = " "
-            melhor_valor = max(melhor_valor, valor)
-        return melhor_valor
+    if maximizando:
+        # vez do agente - quer o maior valor possivel
+        melhor = float('-inf')
+        for (l, c) in posicoes_vazias(tabuleiro):
+            tabuleiro[l][c] = "O"
+            resultado = minimax(tabuleiro, profundidade + 1, False)
+            tabuleiro[l][c] = " "  # desfaz pra testar a proxima opcao
+            if resultado > melhor:
+                melhor = resultado
+        return melhor
 
     else:
-        melhor_valor = float('inf')
-        for (linha, coluna) in movimentos:
-            tabuleiro[linha][coluna] = "X"
-            valor = minimax(tabuleiro, profundidade + 1, True)
-            tabuleiro[linha][coluna] = " "
-            melhor_valor = min(melhor_valor, valor)
-        return melhor_valor
+        # vez do usuario - assume que ele vai jogar o melhor possivel 
+        melhor = float('inf')
+        for (l, c) in posicoes_vazias(tabuleiro):
+            tabuleiro[l][c] = "X"
+            resultado = minimax(tabuleiro, profundidade + 1, True)
+            tabuleiro[l][c] = " "
+            if resultado < melhor:
+                melhor = resultado
+        return melhor
 
 
-def melhor_jogada_agente(tabuleiro):
-    melhor_valor = float('-inf')
-    melhor_movimento = None
+# percorre as jogadas possiveis e escolhe a de maior valor minimax
+def jogada_agente(tabuleiro):
+    melhor_val = float('-inf')
+    jogada = None
 
-    for (linha, coluna) in obter_movimentos_possiveis(tabuleiro):
-        tabuleiro[linha][coluna] = "O"
-        valor = minimax(tabuleiro, 0, False)
-        tabuleiro[linha][coluna] = " "
+    for (l, c) in posicoes_vazias(tabuleiro):
+        tabuleiro[l][c] = "O"
+        val = minimax(tabuleiro, 0, False)
+        tabuleiro[l][c] = " "
 
-        if valor > melhor_valor:
-            melhor_valor = valor
-            melhor_movimento = (linha, coluna)
+        if val > melhor_val:
+            melhor_val = val
+            jogada = (l, c)
 
-    return melhor_movimento
+    return jogada
+
 
 def start_jogo():
 
@@ -99,59 +112,60 @@ def start_jogo():
         [" ", " ", " "]
     ]
 
-    print("\n  JOGO DA VELHA - MINIMAX  ")
-    print("\nVocê joga com X | Agente joga com O")
-    print("Linhas e colunas são numeradas de 1 a 3\n")
-
+    print("\nJogo da Velha - Voce (X) vs Agente (O)")
+    print("Linhas e colunas de 1 a 3\n")
     mostra_tabuleiro(tabuleiro)
 
-    jogador_atual = "X"
+    turno = "X"
 
     while True:
 
-        if jogador_atual == "X":
-            print(f"\nSua vez (X):")
+        if turno == "X":
+            print("\nSua vez:")
 
+            # fica pedindo ate o usuario digitar algo valido
             while True:
                 try:
-                    linha  = int(input("Escolha uma linha  (1-3): ")) - 1
-                    coluna = int(input("Escolha uma coluna (1-3): ")) - 1
+                    linha = int(input("Linha (1-3): ")) - 1
+                    coluna = int(input("Coluna (1-3): ")) - 1
 
                     if linha not in range(3) or coluna not in range(3):
-                        print("Posição fora do tabuleiro. Tente novamente.")
+                        print("Fora do tabuleiro, tenta de novo.")
                         continue
 
                     if tabuleiro[linha][coluna] != " ":
-                        print("Posição já ocupada. Escolha outra.")
+                        print("Ja tem alguem ai, escolhe outra.")
                         continue
 
                     break
 
                 except ValueError:
-                    print("Entrada inválida. Digite um número inteiro.")
+                    print("Digita um numero.")
 
             tabuleiro[linha][coluna] = "X"
 
         else:
-            print("\nVez do Agente (O) — calculando melhor jogada...")
-            linha, coluna = melhor_jogada_agente(tabuleiro)
+            print("\nAgente pensando...")
+            linha, coluna = jogada_agente(tabuleiro)
             tabuleiro[linha][coluna] = "O"
-            print(f"Agente jogou na linha {linha + 1}, coluna {coluna + 1}")
+            print(f"Agente jogou em ({linha + 1}, {coluna + 1})")
 
         mostra_tabuleiro(tabuleiro)
 
-        if verifica_vitoria(tabuleiro, jogador_atual):
-            if jogador_atual == "X":
-                print("Parabéns! Você venceu!")
+        if verifica_vitoria(tabuleiro, turno):
+            if turno == "X":
+                print("Voce ganhou!")
             else:
-                print("O Agente venceu! Melhor sorte na próxima. 🤖")
+                print("O agente ganhou!")
             return
 
         if verifica_empate(tabuleiro):
-            print("O jogo terminou em empate!")
+            print("Empatou!")
             return
 
-        jogador_atual = "O" if jogador_atual == "X" else "X"
+        # troca o turno
+        turno = "O" if turno == "X" else "X"
+
 
 if __name__ == "__main__":
     start_jogo()
